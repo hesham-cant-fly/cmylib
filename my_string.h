@@ -1,8 +1,11 @@
 #ifndef MY_STRING_H_
 #define MY_STRING_H_
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifndef GROW_FACTOR
@@ -55,7 +58,7 @@ String string_new(const size_t cap)
     String res = {
         .cap = cap,
         .len = 0,
-        .data = alloc(char, cap + 1),
+        .data = malloc(sizeof(char) * cap + 1),
     };
     res.data[0] = '\0';
     return res;
@@ -112,7 +115,8 @@ void string_reserve(String *self, const size_t new_cap)
     self->cap = new_cap;
 
     if (self->data == NULL) {
-        panic(("Cannot reserve new capacity."));
+        printf("Cannot reserve new capacity.\n");
+        exit(-1);
     }
 }
 #else
