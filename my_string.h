@@ -1,6 +1,8 @@
 #ifndef MY_STRING_H_
 #define MY_STRING_H_
 
+// #define MY_STRING_IMPL
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
