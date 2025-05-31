@@ -1,6 +1,7 @@
 #ifndef MY_HASH_H_
 #define MY_HASH_H_
 
+#include "my_termcolor.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -208,15 +209,26 @@ void print_hashmap_pro(void *self, size_t entry_size)
     for (size_t i = 0; i < header->cap; i++) {
         Entry entry = GET(i);
         if (entry.key == NULL) {
-            printf("[%04zu] (NULL)", i);
+            printf(ANSI_CODE_CYAN "[" ANSI_CODE_RESET ANSI_CODE_GREEN
+                                  "%04zu" ANSI_CODE_RESET ANSI_CODE_CYAN
+                                  "]" ANSI_CODE_RESET ANSI_CODE_BOLD
+                                  " (NULL)" ANSI_CODE_RESET,
+                   i);
         } else {
-            printf("[%04zu] \"%s\"", i, entry.key);
+            printf(ANSI_CODE_CYAN
+                   "[" ANSI_CODE_RESET ANSI_CODE_GREEN
+                   "%04zu" ANSI_CODE_RESET ANSI_CODE_CYAN
+                   "]" ANSI_CODE_RESET ANSI_CODE_BOLD ANSI_CODE_YELLOW
+                   " \"%s\"" ANSI_CODE_RESET,
+                   i, entry.key);
         }
 
         Entry *current = entry.next;
         while (current != NULL) {
             Entry *next = current->next;
-            printf(" -> \"%s\"", current->key);
+            printf(" -> " ANSI_CODE_BOLD ANSI_CODE_YELLOW
+                   "\"%s\"" ANSI_CODE_RESET,
+                   current->key);
             current = next;
         }
 
