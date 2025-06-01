@@ -25,6 +25,13 @@ typedef struct Entry {
     char *key;
 } Entry;
 
+typedef struct HashMapIter {
+    size_t current;
+    Entry *current_entry;
+    HashMapHeader *header;
+    int done;
+} HashMapIter;
+
 #define hm_init(T) (T *)init_hashmap(sizeof(T), default_string_hash)
 #define hm_deinit(hm) free_hashmap((void **)&hm, sizeof(typeof(*hm)))
 #define hm_header(hm) (((HashMapHeader *)hm) - 1)
@@ -54,6 +61,35 @@ typedef struct Entry {
         };                                                                     \
         set_hashmap(hm, sizeof(typeof(*hm)), (Entry *)&entry);                 \
     } while (0)
+#define hm_iter(hm)                                                            \
+    ((hm) != NULL ? (HashMapIter){1, (Entry *)(hm), hm_header(hm), 0}          \
+                  : (HashMapIter){0, 0, 0, 0})
+#define hm_next(hmi, hm)                                                       \
+    ((typeof(*(hm)) *)(next_hashmap(hmi, sizeof(typeof(*(hm))))))
+
+Entry *next_hashmap(HashMapIter *self, size_t entry_size)
+#ifdef MY_HASH_IMPL
+{
+#define GET(i) (*((Entry *)((void *)(self->header + 1) + i * entry_size)))
+    while (self->current < self->header->cap) {
+        Entry *current = self->current_entry;
+        if (current != NULL) {
+            if (current->key != NULL) {
+                self->current_entry = current->next;
+                return current;
+            }
+        }
+        self->current_entry = &GET(self->current);
+        self->current++;
+    }
+    self->done = 1;
+
+    return NULL;
+#undef GET
+}
+#else
+    ;
+#endif
 
 int contains_hashmap(void *self, size_t entry_size, const char *key)
 #ifdef MY_HASH_IMPL
