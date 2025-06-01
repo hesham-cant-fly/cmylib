@@ -212,6 +212,7 @@ void set_hashmap(void *self, size_t entry_size, Entry *entry)
         return;
     }
     if (strcmp(GET(actual_hash).key, entry->key) == 0) {
+        entry->next = GET(actual_hash).next;
         free(GET(actual_hash).key);
         memcpy(&GET(actual_hash), entry, entry_size);
         return;
@@ -223,18 +224,61 @@ void set_hashmap(void *self, size_t entry_size, Entry *entry)
         if (strcmp(current->key, entry->key) == 0) {
             free(current->key);
             memcpy(current, entry, entry_size);
+            current->next = next; // Preserve the next pointer
             return;
         }
         current = next;
     }
 
-    current->next = malloc(entry_size);
-    memcpy(current->next, entry, entry_size);
+    Entry *new_entry = malloc(entry_size);
+    if (new_entry == NULL) {
+        return;
+    }
+    memcpy(new_entry, entry, entry_size);
+    new_entry->next = NULL;
+    current->next = new_entry;
 #undef GET
 }
 #else
     ;
 #endif
+
+/* void set_hashmap(void *self, size_t entry_size, Entry *entry) */
+/* #ifdef MY_HASH_IMPL */
+/* { */
+/* #define GET(i) (*((Entry *)(self + i * entry_size))) */
+/*     HashMapHeader *header = hm_header(self); */
+/*     size_t hash = header->hashFN(entry->key, header->cap); */
+/*     size_t actual_hash = hash % header->cap; */
+
+/*     if (GET(actual_hash).key == NULL) { */
+/*         memcpy(&GET(actual_hash), entry, entry_size); */
+/*         return; */
+/*     } */
+/*     if (strcmp(GET(actual_hash).key, entry->key) == 0) { */
+/*         free(GET(actual_hash).key); */
+/*         memcpy(&GET(actual_hash), entry, entry_size); */
+/*         return; */
+/*     } */
+
+/*     Entry *current = &GET(actual_hash); */
+/*     while (current->next != NULL) { */
+/*         Entry *next = current->next; */
+/*         if (strcmp(current->key, entry->key) == 0) { */
+/*             free(current->key); */
+/*             memcpy(current, entry, entry_size); */
+/*             return; */
+/*         } */
+/*         current = next; */
+/*     } */
+
+/*     current->next = malloc(entry_size); */
+/*     memcpy(current->next, entry, entry_size); */
+/* #undef GET */
+/* } */
+/* #else */
+/*     ; */
+/* #endif */
 
 void print_hashmap_pro(void *self, size_t entry_size)
 #ifdef MY_HASH_IMPL
