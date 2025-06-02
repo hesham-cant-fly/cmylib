@@ -31,6 +31,8 @@ typedef struct ArrayListHeader {
          ? (ArrayListHeader *)(((void *)(arr)) - sizeof(ArrayListHeader))      \
          : (0))
 #define arrlen(arr) (((arr) != NULL) ? arrheader(arr)->len : 0)
+#define arrsetlen(arr, new_len)                                                \
+    (((arr) != NULL) ? (arrheader(arr)->len = new_len) : 0)
 #define arrcap(arr) (((arr) != NULL) ? arrheader(arr)->cap : 0)
 #define arrpush(arr, el)                                                       \
     (((arr) != NULL) ? (array_push((void **)&arr, sizeof(typeof(*arr))),       \
