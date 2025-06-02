@@ -44,6 +44,12 @@ typedef struct HashMapIter {
         entry ? *(typeof((hm)->value) *)(entry + 1) : (typeof((hm)->value))0;  \
     })                                                                         \
                   : (typeof((hm)->value))0)
+#define hm_get_entry(hm, key)                                                  \
+    ((hm) != NULL ? ({                                                         \
+        Entry *entry = get_hashmap(hm, sizeof(typeof(*(hm))), (key));          \
+        entry ? (typeof((hm)))(entry) : (typeof(*(hm)) *)0;                    \
+    })                                                                         \
+                  : (typeof(*(hm)) *)0)
 #define hm_delete(hm, key)                                                     \
     do {                                                                       \
         if (hm == NULL)                                                        \
@@ -52,14 +58,14 @@ typedef struct HashMapIter {
     } while (0)
 #define hm_set(hm, key, value)                                                 \
     do {                                                                       \
-        if (hm == NULL)                                                        \
+        if ((hm) == NULL)                                                      \
             break;                                                             \
-        typeof(*hm) entry = {                                                  \
+        typeof(*(hm)) entry = {                                                \
             NULL,                                                              \
             strdup(key),                                                       \
-            value,                                                             \
+            (value),                                                           \
         };                                                                     \
-        set_hashmap(hm, sizeof(typeof(*hm)), (Entry *)&entry);                 \
+        set_hashmap(hm, sizeof(typeof(*(hm))), (Entry *)&entry);               \
     } while (0)
 #define hm_iter(hm)                                                            \
     ((hm) != NULL ? (HashMapIter){1, (Entry *)(hm), hm_header(hm), 0}          \
