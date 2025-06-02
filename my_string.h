@@ -43,10 +43,12 @@ String string_from_chars_copy(const char *chs)
 #ifdef MY_STRING_IMPL
 {
     size_t len = strlen(chs);
+    char *buffer = malloc(len + 1);
+    strcpy(buffer, chs);
     String res = {
         .cap = len,
         .len = len,
-        .data = strdup(chs),
+        .data = buffer,
     };
 
     return res;
