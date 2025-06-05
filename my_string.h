@@ -1,14 +1,14 @@
 #ifndef MY_STRING_H_
 #define MY_STRING_H_
 
-// #define MY_STRING_IMPL
-
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// #define MY_STRING_IMPL
 
 #ifndef GROW_FACTOR
 #define GROW_FACTOR 1.5
@@ -21,16 +21,16 @@ typedef struct String {
 } String;
 
 #ifdef MY_STRING_IMPL
-static inline size_t string_actual_cap(const String *self) {
+static inline size_t string_actual_cap(const String *restrict self) {
     return self->cap + 1;
 }
 
-static inline size_t string_actual_len(const String *self) {
+static inline size_t string_actual_len(const String *restrict self) {
     return self->len + 1;
 }
 #endif
 
-String string_from_chars(const char *chs)
+String string_from_chars(const char *restrict chs)
 #ifdef MY_STRING_IMPL
 {
     size_t len = strlen(chs);
@@ -39,7 +39,7 @@ String string_from_chars(const char *chs)
 #else
     ;
 #endif
-String string_from_chars_copy(const char *chs)
+String string_from_chars_copy(const char *restrict chs)
 #ifdef MY_STRING_IMPL
 {
     size_t len = strlen(chs);
@@ -71,7 +71,7 @@ String string_new(const size_t cap)
     ;
 #endif
 
-const char *string_as_cstr(const String *self)
+const char *string_as_cstr(const String *restrict self)
 #ifdef MY_STRING_IMPL
 {
     return self->data;
@@ -90,7 +90,7 @@ size_t string_set_len(String *self, size_t len)
     ;
 #endif
 
-String string_format(const char *fmt, ...)
+String string_format(const char *restrict fmt, ...)
 #ifdef MY_STRING_IMPL
 {
     va_list args;
@@ -112,7 +112,7 @@ String string_format(const char *fmt, ...)
     ;
 #endif
 
-void string_reserve(String *self, const size_t new_cap)
+void string_reserve(String *restrict self, const size_t new_cap)
 #ifdef MY_STRING_IMPL
 {
     self->data = realloc(self->data, new_cap + 1);
@@ -126,7 +126,7 @@ void string_reserve(String *self, const size_t new_cap)
 #else
     ;
 #endif
-void string_resize(String *self, const size_t new_size)
+void string_resize(String *restrict self, const size_t new_size)
 #ifdef MY_STRING_IMPL
 {
     if (self->cap < new_size) {
@@ -143,7 +143,7 @@ void string_resize(String *self, const size_t new_size)
 #else
     ;
 #endif
-void string_delete(String *self)
+void string_delete(String *restrict self)
 #ifdef MY_STRING_IMPL
 {
     self->len = 0;
@@ -154,7 +154,7 @@ void string_delete(String *self)
     ;
 #endif
 
-void string_push_char(String *self, const char ch)
+void string_push_char(String *restrict self, const char ch)
 #ifdef MY_STRING_IMPL
 {
     if (self->len + 1 >= self->cap) {
@@ -167,12 +167,15 @@ void string_push_char(String *self, const char ch)
 #else
     ;
 #endif
-void string_push_cstr(String *self, const char *cstr)
+void string_push_cstr(String *restrict self, const char *restrict cstr)
 #ifdef MY_STRING_IMPL
 {
     size_t len = strlen(cstr);
     if (self->len + len >= self->cap) {
-        string_reserve(self, self->cap * GROW_FACTOR);
+        size_t newcap = self->cap * GROW_FACTOR;
+        if (self->len + len > newcap)
+            newcap = self->len + len;
+        string_reserve(self, newcap);
     }
 
     memcpy(self->data + self->len, cstr, len);
@@ -182,11 +185,14 @@ void string_push_cstr(String *self, const char *cstr)
 #else
     ;
 #endif
-void string_push_string(String *self, const String *other)
+void string_push_string(String *restrict self, const String *restrict other)
 #ifdef MY_STRING_IMPL
 {
     if (self->len + other->len >= self->cap) {
-        string_reserve(self, self->cap * GROW_FACTOR);
+        size_t newcap = self->cap * GROW_FACTOR;
+        if (self->len + other->len > newcap)
+            newcap = self->len + other->len;
+        string_reserve(self, newcap);
     }
 
     memcpy(self->data + self->len, other->data, other->len);
@@ -202,7 +208,7 @@ void string_push_string(String *self, const String *other)
         char *: string_push_cstr,                                              \
         String *: string_push_string)(self, target)
 
-bool string_eq_cstr(const String *self, const char *other)
+bool string_eq_cstr(const String *restrict self, const char *restrict other)
 #ifdef MY_STRING_IMPL
 {
     size_t len = strlen(other);
@@ -214,7 +220,7 @@ bool string_eq_cstr(const String *self, const char *other)
 #else
     ;
 #endif
-bool string_eq_string(const String *self, const String *other)
+bool string_eq_string(const String *restrict self, const String *restrict other)
 #ifdef MY_STRING_IMPL
 {
     if (self->len != other->len)
@@ -229,7 +235,7 @@ bool string_eq_string(const String *self, const String *other)
     _Generic((target), char *: string_eq_cstr, String *: string_eq_string)(    \
         self, target)
 
-bool string_starts_with_char(const String *self, const char other)
+bool string_starts_with_char(const String *restrict self, const char other)
 #ifdef MY_STRING_IMPL
 {
     if (self->len != 1)
@@ -252,7 +258,8 @@ bool string_starts_with_cstr(const String *self, const char *other)
 #else
     ;
 #endif
-bool string_starts_with_string(const String *self, const String *other)
+bool string_starts_with_string(const String *restrict self,
+                               const String *restrict other)
 #ifdef MY_STRING_IMPL
 {
     if (self->len < other->len)
@@ -269,7 +276,7 @@ bool string_starts_with_string(const String *self, const String *other)
         char *: string_starts_with_cstr,                                       \
         String *: string_starts_with_string)(self, other)
 
-bool string_ends_with_char(const String *self, const char other)
+bool string_ends_with_char(const String *restrict self, const char other)
 #ifdef MY_STRING_IMPL
 {
     if (self->len < 1)
@@ -280,7 +287,8 @@ bool string_ends_with_char(const String *self, const char other)
 #else
     ;
 #endif
-bool string_ends_with_cstr(const String *self, const char *other)
+bool string_ends_with_cstr(const String *restrict self,
+                           const char *restrict other)
 #ifdef MY_STRING_IMPL
 {
     size_t len = strlen(other);
@@ -292,7 +300,8 @@ bool string_ends_with_cstr(const String *self, const char *other)
 #else
     ;
 #endif
-bool string_ends_with_string(const String *self, const String *other)
+bool string_ends_with_string(const String *restrict self,
+                             const String *restrict other)
 #ifdef MY_STRING_IMPL
 {
     if (self->len < other->len)
