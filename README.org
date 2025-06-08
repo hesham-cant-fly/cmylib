@@ -1,3 +1,5 @@
-#+title: My std
+#+title: cmylib
 
 Collection of C11 headers that I use
+
+Credits to Ameer for suggesting the name
