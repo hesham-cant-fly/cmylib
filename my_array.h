@@ -37,7 +37,7 @@ typedef struct ArrayListHeader {
 #define arrpush(arr, el)                                                       \
     (((arr) != NULL) ? (array_push((void **)&arr, sizeof(typeof(*arr))),       \
                         arr[arrheader(arr)->len++] = el)                       \
-                     : 0)
+                     : el)
 #define arrpop(arr)                                                            \
     (((arr) != NULL)                                                           \
          ? arr[arrheader(arr)->len == 0 ? 0 : arrheader(arr)->len--]           \
