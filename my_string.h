@@ -41,8 +41,7 @@ typedef struct String {
 #define string_eq(self, target)                                                \
   _Generic((target),                                                           \
       char *: string_eq_cstr,                                                  \
-      String *: string_eq_string                                               \
-      self, target)
+      String *: string_eq_string)(self, target)
 
 String string_from_chars(const char *restrict chs);
 String string_from_chars_copy(const char *restrict chs);
