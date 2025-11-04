@@ -4,6 +4,12 @@ Collection of C99 headers that I use
 
 Credits to Ameer for suggesting the name
 
+* Quick Template
+#+begin_src sh
+curl https://raw.githubusercontent.com/hesham-cant-fly/cmylib/refs/heads/main/quick-project.sh | sh
+#+end_src
+
+
 * =my_string.h=
 a dynmic heap allocated zero terminated string in C.
 
