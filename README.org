@@ -1,5 +1,45 @@
 #+title: cmylib
 
-Collection of C11 headers that I use
+Collection of C99 headers that I use
 
 Credits to Ameer for suggesting the name
+
+* =my_string.h=
+a dynmic heap allocated zero terminated string in C.
+
+** example
+#+begin_src c
+#define MY_STRING_IMPL
+#include "my_array.h"
+
+String txt = string_format("Hello %s\n", "World");
+
+printf("%s", txt.data); // Hello World
+
+string_push(&txt, "Hola!");
+assert(string_starts_with_cstr(&txt, "Hello"));
+// You can use `string_starts_with`. but works only with C11 and above.
+
+string_delete(&txt);
+#+end_src
+
+* =my_array.h=
+a dynamic array implementation in C.
+
+** example
+#+begin_src c
+#define MY_ARRAY_IMPL
+#include "my_array.h"
+
+int *xs = arrinit(int);
+for (size_t i=0; i<10; ++i) {
+  arrpush(rand() % 100);
+}
+
+for (size_t i=0; i<arrlen(xs); ++i) {
+  printf("%d -> %d\n", i, xs[i]);
+}
+
+arrfree(xs);
+#+end_src
+

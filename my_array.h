@@ -7,44 +7,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 typedef struct ArrayListHeader {
-    size_t len;
-    size_t cap;
+  size_t len;
+  size_t cap;
 } ArrayListHeader;
 
 #ifndef INITIAL_CAP
 #define INITIAL_CAP 10
 #endif
 #ifndef GROW_FACTOR
-#define GROW_FACTOR 1.5
+#define GROW_FACTOR 2
 #endif
 
-#define NOSTMT                                                                 \
-    do {                                                                       \
-    } while (0)
-
 #define arrinit(T) (T *)(create_array(sizeof(T)))
-#define arrfree(arr) (((arr) != NULL) ? free(arrheader(arr)) : 0)
-#define arrheader(arr)                                                         \
-    (((arr) != NULL)                                                           \
-         ? (ArrayListHeader *)(((void *)(arr)) - sizeof(ArrayListHeader))      \
-         : (0))
-#define arrlen(arr) (((arr) != NULL) ? arrheader(arr)->len : 0)
-#define arrsetlen(arr, new_len)                                                \
-    (((arr) != NULL) ? (arrheader(arr)->len = new_len) : 0)
-#define arrcap(arr) (((arr) != NULL) ? arrheader(arr)->cap : 0)
-#define arrpush(arr, el)                                                       \
-    (((arr) != NULL) ? (array_push((void **)&arr, sizeof(typeof(*arr))),       \
-                        arr[arrheader(arr)->len++] = el)                       \
-                     : el)
-#define arrpop(arr)                                                            \
-    (((arr) != NULL)                                                           \
-         ? arr[arrheader(arr)->len == 0 ? 0 : arrheader(arr)->len--]           \
-         : (typeof(*arr))0)
-#define arrpopsome(arr, x)                                                     \
-    (((arr) != NULL) ? (((x) <= arrlen(arr)) ? (arrheader(arr)->len -= x) : 0) \
-                     : 0)
+#define arrfree(arr) (assert((arr) != NULL), free(arrheader((arr))))
+#define arrheader(arr) (assert((arr) != NULL), (ArrayListHeader *)(((char *)(arr)) - sizeof(ArrayListHeader)))
+#define arrlen(arr) (((arr) != NULL) ? arrheader((arr))->len : 0)
+#define arrsetlen(arr, new_len) (asser((arr) != NULL), (arrheader((arr))->len = new_len))
+#define arrcap(arr) (assert((arr) != NULL), arrheader((arr))->cap)
+#define arrpush(arr, ...) (assert((arr) != NULL), array_push((void **)&(arr), sizeof(*(arr))), arr[arrheader((arr))->len++] = (__VA_ARGS__))
+#define arrpop(arr) (assert((arr) != NULL), assert(arrheader((arr))->len != 0), (arr)[arrheader((arr))->len--])
 
 void *create_array(size_t element_size)
 #ifdef MY_ARRAY_IMPL

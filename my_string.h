@@ -1,6 +1,12 @@
 #ifndef __MY_STRING_H
 #define __MY_STRING_H
 
+// #define MY_STRING_IMPL
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -8,14 +14,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #define MY_STRING_IMPL
 
 #ifndef GROW_FACTOR
-#define GROW_FACTOR 2
+#  define GROW_FACTOR 2
 #endif
 
 typedef struct String {
-  char *data;
+  char   *data;
   size_t len;
   size_t cap;
 } String;
@@ -43,30 +48,126 @@ typedef struct String {
       char *: string_eq_cstr,                                                  \
       String *: string_eq_string)(self, target)
 
-String string_from_chars(const char *restrict chs);
-String string_from_chars_copy(const char *restrict chs);
+/**
+  * Allocates a buffer in the heap using `malloc` with specifies capacity
+  * @param cap the string capacity
+  * @return an empty `String`, must be deleted with `string_delete`
+  */
 String string_new(const size_t cap);
-const char *string_as_cstr(const String *restrict self);
-size_t string_set_len(String *self, size_t len);
+
+/**
+  * Does not allocate any memory, and just returns a string referencing to `chs`.
+  * DO NOT free it with `string_delete` unless you know What are you doing.
+  * @param chs NULL terminated string
+  * @return a `String` referencing to `chs`
+  */
+String string_from_chars(const char *restrict chs);
+
+/**
+  * Allocates a new buffer that is enough to hold `chs`. must be freed with `string_delete`
+  * @note you can use `string_format` instead
+  * @param chs NULL terminated string
+  * @return a heap allocated `String`
+  */
+String string_from_chars_copy(const char *restrict chs);
+
+/**
+  * similar to `sprintf` but it allocates the necessiry memory automatically.
+  * @param fmt the format string
+  * @param ... arguments
+  * @return heap allocated `String`
+  */
 String string_format(const char *restrict fmt, ...);
-void string_reserve(String *restrict self, const size_t new_cap);
-void string_resize(String *restrict self, const size_t new_size);
+
+/**
+  * frees the `String::data` and sets everything to 0
+  * @param self the string you want to free
+  */
 void string_delete(String *restrict self);
-void string_push_char(String *restrict self, const char ch);
-void string_push_cstr(String *restrict self, const char *restrict cstr);
-void string_push_string(String *restrict self, const String *restrict other);
+
+/**
+  * @depricated use `.data` instead.
+  */
+const char *string_as_cstr(const String *restrict self);
+
+/**
+  * sets the length of the string to `.len`. this is unsafe and might cause an UB,
+  * use `string_resize` instead.
+  * @param self a pointer to the `String`
+  * @param len the targeted length
+  * @return the new length
+  */
+size_t string_set_len(String *self, size_t len);
+
+/**
+  * Mutates the `.cap` resizes the allocated buffer
+  * @param self a pointer to the `String`
+  * @param new_cap the targeted capacity
+  */
+void string_reserve(String *restrict self, const size_t new_cap);
+
+/**
+  * a safer version of `string_set_len` where it allocates new memory if `new_size` > `.cap`.
+  * @param self a pointer to the `String`
+  * @param new_size the new len
+  */
+void string_resize(String *restrict self, const size_t new_size);
+
+/**
+  * pushs a formated string to `String`.
+  * @param self a pointer to the `String`
+  * @param fmt the format
+  * @param ... the format arguments
+  */
 void string_pushf(String *restrict self, const char *restrict fmt, ...);
+
+/**
+  * Pushs a single character (why?).
+  * @param self a pointer to the `String`.
+  * @param ch a character
+  */
+void string_push_char(String *restrict self, const char ch);
+
+/**
+  * Pushs a full null terminated string.
+  * @param self a pointer to the string
+  * @param cstr a null terminated string
+  */
+void string_push_cstr(String *restrict self, const char *restrict cstr);
+
+/**
+  * Pushs a `String` (other) to `String` (self)
+  * @param self a pointer to the `String`
+  * @param other o pointer to the string you want to push
+  */
+void string_push_string(String *restrict self, const String *restrict other);
+
+/**
+  * tests the equality of two strings
+  */
 bool string_eq_cstr(const String *restrict self, const char *restrict other);
+/**
+  * tests the equality of two strings
+  */
 bool string_eq_string(const String *restrict self, const String *restrict other);
+
+/** Checks if the string starts with a specific charcater */
 bool string_starts_with_char(const String *restrict self, const char other);
+
+/** Checks if the string starts with a specific string */
 bool string_starts_with_cstr(const String *self, const char *other);
-bool string_starts_with_string(const String *restrict self,
-                               const String *restrict other);
+
+/** Checks if the string starts with a specific string */
+bool string_starts_with_string(const String *restrict self, const String *restrict other);
+
+/** Checks if the string ends with a specific charcater */
 bool string_ends_with_char(const String *restrict self, const char other);
-bool string_ends_with_cstr(const String *restrict self,
-                           const char *restrict other);
-bool string_ends_with_string(const String *restrict self,
-                             const String *restrict other);
+
+/** Checks if the string ends with a specific string */
+bool string_ends_with_cstr(const String *restrict self, const char *restrict other);
+
+/** Checks if the string ends with a specific string */
+bool string_ends_with_string(const String *restrict self, const String *restrict other);
 
 #ifdef MY_STRING_IMPL
 static inline size_t string_actual_cap(const String *restrict self) {
@@ -281,4 +382,9 @@ bool string_ends_with_string(const String *restrict self,
                  other->len) == 0;
 }
 #endif // MY_STRING_IMPL
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
 #endif // __MY_STRING_H
