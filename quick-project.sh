@@ -32,6 +32,14 @@ get-main-c()
     echo "}"
 }
 
+get-gitignore()
+{
+    echo ".cache/"
+    echo ".clj-kondo/"
+    echo ".lsp/"
+    echo "build/"
+}
+
 files=(
     "cmylib.h"
     "cli_tools.h"
@@ -47,6 +55,7 @@ mkdir src/
 touch .project
 get-main-c > main.c
 
+get-gitignore > .gitignore 
 get-cmake-template > CMakeLists.txt
 
 for i in "${files[@]}"; do   # The quotes are necessary here
