@@ -4,12 +4,6 @@ Collection of C99 headers that I use
 
 Credits to Ameer for suggesting the name
 
-* Quick Template
-#+begin_src sh
-curl https://raw.githubusercontent.com/hesham-cant-fly/cmylib/refs/heads/main/quick-project.sh | sh
-#+end_src
-
-
 * =my_string.h=
 a dynmic heap allocated zero terminated string in C.
 
@@ -29,23 +23,49 @@ assert(string_starts_with_cstr(&txt, "Hello"));
 string_delete(&txt);
 #+end_src
 
+* =my_thin_array.h=
+a dynamic thin array implementation in C.
+
+** example
+#+begin_src c
+#define MY_ARRAY_IMPL
+#include "my_thin_array.h"
+
+int *xs = thinarrinit(int);
+for (size_t i=0; i<10; ++i) {
+  thinarrpush(rand() % 100);
+}
+
+for (size_t i=0; i<thinarrlen(xs); ++i) {
+  printf("%d -> %d\n", i, xs[i]);
+}
+
+thinarrfree(xs);
+#+end_src
+
+
 * =my_array.h=
 a dynamic array implementation in C.
 
 ** example
 #+begin_src c
-#define MY_ARRAY_IMPL
 #include "my_array.h"
 
-int *xs = arrinit(int);
-for (size_t i=0; i<10; ++i) {
-  arrpush(rand() % 100);
+struct Numbers {
+	size_t cap;
+	size_t len;
+	int* items;
+};
+
+struct Numbers numbers = {0};
+arrpush(numbers, 1);
+arrpush(numbers, 2);
+arrpush(numbers, 3);
+
+arreach(numbers, i) {
+    printf("%d\n", numbers.items[i]);
 }
 
-for (size_t i=0; i<arrlen(xs); ++i) {
-  printf("%d -> %d\n", i, xs[i]);
-}
-
-arrfree(xs);
+arrfree(numbers);
 #+end_src
 

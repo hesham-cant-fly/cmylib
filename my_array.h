@@ -1,75 +1,100 @@
 #ifndef MY_ARRAY_H_
 #define MY_ARRAY_H_
 
-// #define MY_ARRAY_IMPL
-
-#include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 
-typedef struct ArrayListHeader {
-  size_t len;
-  size_t cap;
-} ArrayListHeader;
+/* Usage:
+  struct NumberList {
+	size_t cap;
+	size_t len;
+	int* items;
+  };
+
+  struct NumberList numbers = {0};
+  arrpush(numbers, 1);
+  arrpush(numbers, 2);
+  arrpush(numbers, 3);
+
+  arreach(numbers, i) {
+    printf("%d\n", numbers.items[i]);
+  }
+
+  arrfree(numbers);
+ */
 
 #ifndef INITIAL_CAP
-#define INITIAL_CAP 10
-#endif
+# define INITIAL_CAP 256
+#endif // !INITIAL_CAP 
 #ifndef GROW_FACTOR
-#define GROW_FACTOR 2
-#endif
+# define GROW_FACTOR 2
+#endif // !GROW_FACTOR
 
-#define arrinit(T) (T *)(create_array(sizeof(T)))
-#define arrfree(arr) (assert((arr) != NULL), free(arrheader((arr))))
-#define arrheader(arr) (assert((arr) != NULL), (ArrayListHeader *)(((char *)(arr)) - sizeof(ArrayListHeader)))
-#define arrlen(arr) (((arr) != NULL) ? arrheader((arr))->len : 0)
-#define arrsetlen(arr, new_len) (asser((arr) != NULL), (arrheader((arr))->len = new_len))
-#define arrcap(arr) (assert((arr) != NULL), arrheader((arr))->cap)
-#define arrpush(arr, ...) (assert((arr) != NULL), array_push((void **)&(arr), sizeof(*(arr))), arr[arrheader((arr))->len++] = (__VA_ARGS__))
-#define arrpop(arr) (assert((arr) != NULL), assert(arrheader((arr))->len != 0), (arr)[arrheader((arr))->len--])
+#define arrfree(array__) \
+	do { \
+		free((array__).items); \
+		(array__).len = 0; \
+		(array__).cap = 0; \
+	} while (0)
 
-void *create_array(size_t element_size)
-#ifdef MY_ARRAY_IMPL
-{
-    ArrayListHeader *res =
-        malloc(sizeof(ArrayListHeader) + (element_size * INITIAL_CAP));
-    if (res == NULL) {
-        return NULL;
-    }
-    memset(res, 0, sizeof(ArrayListHeader) + (element_size * INITIAL_CAP));
-    res->len = 0;
-    res->cap = INITIAL_CAP;
-    return res + 1;
-}
-#else
-    ;
-#endif
+#define arrpush(array__, item__) \
+	do { \
+		if ((array__).len >= (array__).cap) { \
+			arrgrow((array__)); \
+		} \
+		(array__).items[(array__).len++] = (item__);	\
+	} while (0)
 
-void array_grow(void **arr, size_t element_size)
-#ifdef MY_ARRAY_IMPL
-{
-    ArrayListHeader *header = arrheader(*arr);
-    header->cap *= GROW_FACTOR;
-    ArrayListHeader *new_header =
-        realloc(header, sizeof(ArrayListHeader) + element_size * header->cap);
-    *arr = new_header + 1;
-}
-#else
-    ;
-#endif
+#define arrgrow(array__) \
+	do { \
+		const size_t new_cap__ = (array__).cap == 0 ? (INITIAL_CAP) : (array__).cap * (GROW_FACTOR); \
+		(array__).cap = new_cap__; \
+		(array__).items = realloc((array__).items, (array__).cap * sizeof(*(array__).items)); \
+	} while (0)
 
-void array_push(void **arr, size_t element_size)
-#ifdef MY_ARRAY_IMPL
-{
-    ArrayListHeader *header = arrheader(*arr);
-    if (header->len >= header->cap) {
-        array_grow(arr, element_size);
-    }
-}
-#else
-    ;
-#endif
+#define arrinsert(array__, item__, pos__) \
+	do { \
+		size_t len__ = (array__).len; \
+		arrreserve((array__), len__ + 1); \
+		assert((pos__) <= len__); \
+		for (size_t i__ = len__; i__ >= (pos__) ; i__ -= 1) { \
+			(array__).items[i__] = (array__).items[i__ - 1]; \
+		} \
+		(array__).items[(pos__)] = (item__); \
+		(array__).len += 1; \
+	} while (0)
 
-#endif // MY_ARRAY_H_
+#define arrpop(array__) \
+	do { \
+		if ((array__).len == 0) break; \
+		(array__).len -= 1; \
+	} while (0)
+
+#define arrreserve(array__, min_cap__) \
+	do { \
+		if ((array__).cap >= (min_cap__)) {	\
+			break; \
+		} \
+		size_t new_cap__ = (array__).cap ? (array__).cap : INITIAL_CAP; \
+		while (new_cap__ < (min_cap__)) { \
+			new_cap__ *= (GROW_FACTOR);			  \
+		} \
+		(array__).items = realloc((array__).items, new_cap__ * sizeof(*(array__).items)); \
+		(array__).cap = new_cap__; \
+	} while (0)
+
+#define arrlen(array__) ((array__).len)
+#define arrcap(array__) ((array__).len)
+#define arrget(array__, index__) ((array__).items[index__])
+
+#define arreach(array__, index__) \
+	for (size_t index__ = 0; (index__) < (array__).len; (index__) += 1)
+
+#define arrprint(array__, fmt__) \
+	do { \
+		arreach((array__), i__) {	\
+			printf((fmt__), (array__).items[i__]);	\
+		} \
+	} while (0)
+
+#endif // !MY_ARRAY_H_
