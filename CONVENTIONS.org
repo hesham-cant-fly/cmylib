@@ -1,0 +1,18 @@
+#+title: CONVENTIONS
+
+As the creator. and the only user of this library. I will declare some coding conventions for this library (which is going to be applied on my other C projects)
+
+* Indentation
+- Tabs instead of spaces.
+- The ={= must go to a newline in a procedure definition.
+
+* Naming
+snake_case. /FOR ALMOST EVERYTHING/
+- *functions*: snake_case
+- *types*: snake_case but they end with =_t=. It was between the =_t= or the specifiers. Both of them have nice macros implications. But I found that using =_t= is much more powerful. I can elaborate on that someday. but just know the trick is doing concatinations.
+- *macros*: /lower_snake_case/ for macros that can be used in an expression. /UPPER_SNAKE_CASE/ for macros that cannot be used in an expression. I would prefex all macros with =$= but its not standard and not very portable :(
+- *macro arguments*: they must end with =_=. no other identifier should end =_=, except for *privates*.
+- *"privates"*: They start with =m_= and ends with =_=. You may say.. "but Hesham! If you something to be private just declare as =static= in a source file!!". Well.. thats true. but I'm specifically talking about declaration that must be inside of a header (like the =extern= in =source/cmycontext.h=). as they are not intended to be used directly.
+
+* Typedefs
+When using =typedef=, make sure that the name you're gonna put the same now of the =typedef= after the =struct/union/enum= keyword.
