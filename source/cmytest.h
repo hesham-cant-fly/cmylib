@@ -21,6 +21,7 @@
  *
  * int main(void)
  * {
+ *     TEST_SETUP();
  *     RUN_TEST(add_test);
  *     TEST_SUMMARY();
  * }

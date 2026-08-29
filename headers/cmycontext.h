@@ -2,6 +2,7 @@
  * @file cmycontext.h
  * @author Hesham Can't Fly
  * @brief Context system similar to Odin's context
+ * define CMYCONTEXT_DEF to static before including cmycontext.h if you want internal linkage.
  * # Example
  * @code
  * #define CMYCONTEXT_IMPL
@@ -29,6 +30,10 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+
+#ifndef CMYCONTEXT_DEF
+#  define CMYCONTEXT_DEF
+#endif
 
 /**
  * @brief access the current context
@@ -61,29 +66,29 @@ extern context_stack_t m_context_stack_;
 /**
  * @brief inittializes the context. call it only once at the top of `main`
  */
-void init_context(void);
+CMYCONTEXT_DEF void init_context(void);
 
 /**
  * @brief pushes a new context
  */
-void push_context(void);
+CMYCONTEXT_DEF void push_context(void);
 
 /**
  * @brief pops a context
  */
-void pop_context(void);
+CMYCONTEXT_DEF void pop_context(void);
 
 
 #ifdef CMYCONTEXT_IMPL
 
-context_stack_t m_context_stack_ = {0};
+CMYCONTEXT_DEF context_stack_t m_context_stack_ = {0};
 
-void init_context(void)
+CMYCONTEXT_DEF void init_context(void)
 {
 	push_context();
 }
 
-void push_context(void)
+CMYCONTEXT_DEF void push_context(void)
 {
 	if (m_context_stack_.len >= m_context_stack_.cap) {
 		m_context_stack_.cap += 20; // adding 20 because I think exponontial growth is not fitting here
@@ -92,10 +97,10 @@ void push_context(void)
 	}
 
 	m_context_stack_.len += 1;
-	m_context_stack_.items[m_context_stack_.len - 1] = m_context_stack_.items[m_context_stack_.len - 2]
+	m_context_stack_.items[m_context_stack_.len - 1] = m_context_stack_.items[m_context_stack_.len - 2];
 }
 
-void pop_context(void)
+CMYCONTEXT_DEF void pop_context(void)
 {
 	if (m_context_stack_.len < 0) {
 		return;

@@ -15,7 +15,7 @@ CMYCONTEXT_DEF void push_context(void)
 	}
 
 	m_context_stack_.len += 1;
-	m_context_stack_.items[m_context_stack_.len - 1] = m_context_stack_.items[m_context_stack_.len - 2]
+	m_context_stack_.items[m_context_stack_.len - 1] = m_context_stack_.items[m_context_stack_.len - 2];
 }
 
 CMYCONTEXT_DEF void pop_context(void)
