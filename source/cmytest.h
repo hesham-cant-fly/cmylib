@@ -1,4 +1,32 @@
-/** #define TEST_VERBOSE */
+/**
+ * @file cmytest.h
+ * @author Hesham Can't Fly
+ * @brief Super simple testing framework
+ * @note If you want verbose output do `#define TEST_VERBOSE` before include cmytest.h
+ * # Example
+ * @code
+ * #define TEST_VERBOSE // Enable verbose output
+ * #include "cmytest.h"
+ * // Everything you need to know is in this example
+ * int add(int x, int y)
+ * {
+ *     return x + y
+ * }
+ *
+ * TEST_CASE(add_test)
+ * {
+ *     TEST_ASSERT(add(1, 2) == 3);
+ *     TEST_PASS();
+ * }
+ *
+ * int main(void)
+ * {
+ *     RUN_TEST(add_test);
+ *     TEST_SUMMARY();
+ * }
+ * @endcode
+ * @todo I wrote this header before I wrote CONVENTIONS.org .. so maybe I should update some stuff in here lol.
+ */
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -15,12 +43,12 @@
 	size_t total_tests = 0, failed_tests = 0
 
 #ifdef TEST_VERBOSE
-# define REPORT_TEST_ASSERT()											\
+# define REPORT_TEST_ASSERT() \
 	fprintf(stderr, "    [ %sASSERT%s    ] %s%40s%s -- (%s:%u)\n", TEST_CLR_CYAN, TEST_CLR_RESET, TEST_CLR_CYAN, __func__, TEST_CLR_RESET, __FILE__, __LINE__)
 #else
 # define REPORT_TEST_ASSERT()
 #endif /* TEST_VERBOSE */
-#define REPORT_TEST_ASSERT_FAILURE(...)									\
+#define REPORT_TEST_ASSERT_FAILURE(...) \
 	fprintf(stderr, "    [      %sFAIL%s ] %s%40s%s -- %s%s%s (%s:%u)\n", TEST_CLR_RED, TEST_CLR_RESET, TEST_CLR_CYAN, __func__, TEST_CLR_RESET, TEST_CLR_CYAN, #__VA_ARGS__, TEST_CLR_RESET, __FILE__, __LINE__)
 #define REPORT_TEST_CASE_FAILURE(name_) \
 	fprintf(stderr, "[      %sFAIL%s ] %s%44s%s -- (%s:%u)\n", TEST_CLR_RED, TEST_CLR_RESET, TEST_CLR_CYAN, #name_, TEST_CLR_RESET, __FILE__, __LINE__)
@@ -30,8 +58,9 @@
 # else
 # define REPORT_TEST_CASE(name_)
 #endif /* TEST_VERBOSE */
-#define REPORT_TEST_CASE_OK(name_)										\
+#define REPORT_TEST_CASE_OK(name_) \
 	fprintf(stderr, "[ %sOK%s        ] %s%44s%s -- (%s:%u)\n", TEST_CLR_GREEN, TEST_CLR_RESET, TEST_CLR_CYAN, #name_, TEST_CLR_RESET, __FILE__, __LINE__)
+
 #define TEST_SUMMARY() \
 	do { \
 		fprintf(stderr, "\n[  %sSUMMARY%s  ] %s%zu Total%s -- %s%zu Failed%s\n", TEST_CLR_CYAN, TEST_CLR_RESET, TEST_CLR_GREEN, total_tests, TEST_CLR_RESET, TEST_CLR_RED, failed_tests, TEST_CLR_RESET); \

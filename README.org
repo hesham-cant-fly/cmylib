@@ -2,4 +2,31 @@
 
 A collection of single header C libraries made to make my life a bit easier.
 
+#+begin_src C
+#define CMYLIB_IMPL
+#include "cmylib.h"
+
+int main(void)
+{
+    init_cmylib();
+
+    char *two = "World";
+    println("Hello, {s}!", two); // Extendable streaming functions
+
+    return 0;
+}
+#+end_src
+
+* TODO amalgamate =cmylib.h=
+
+* How to use
+You can simply grab [[file:./cmylib.h][cmylib.h]] and include it in you project. But also make sure to =#define CMYLIB_IMPL= before including =cmylib.h= in one source file it generate the implementation.
+
+If you want to make cmylib's implementation's =static= you can also do =#define CMYLIB_DEF static=. also you can mark them as =inline= by replacing that =static= with =inline=.
+
+If you don't want everything. You can grab any =.h= file in [[file:./headers][./headers]]. You only need to know that some of the headers might dependeds on other. e.g. =cmylist.h= depends on =cmyallocator.h=, and expects it to be in the include path. You can simply figure it out which depends on which by look at the source code and see =#include=. I might consider abusing =amalgam.lisp= file to generate a dependecy graph.
+
+* MISC
+** The name of the library
+cmylib pronouces the same as "see my lib". thats why I picked that name.
 
