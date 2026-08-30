@@ -25,7 +25,7 @@
         (if *verbose-output* "-DTEST_VERBOSE" "")))
 
 (defun compile-it (path)
-  (let ((cmd (compile-command "test/test_cmycontext.c")))
+  (let ((cmd (compile-command path)))
     (format t "Compiling: ~A~%" path)
     (multiple-value-bind (output error-output exit-code)
         (uiop:run-program
