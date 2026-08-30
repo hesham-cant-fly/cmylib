@@ -1,5 +1,3 @@
-#!/usr/bin/env -S sbcl --script
-
 (require 'asdf)
 
 (defparameter *cc* "clang")
@@ -49,7 +47,7 @@
     (unless (= exit-code 0)
       (incf *failure-count*))))
 
-(defun main ()
+(defun run-tests ()
   (ensure-directories-exist *build-dir*)
   (setf *compilation-failure* 0)
   (setf *failure-count* 0)
@@ -65,5 +63,3 @@
 
   (unless (= *failure-count* 0)
     (format t "~A Test Failed!~%" *failure-count*)))
-
-(main)

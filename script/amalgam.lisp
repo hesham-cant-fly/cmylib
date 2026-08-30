@@ -1,9 +1,6 @@
-#!/usr/bin/env -S sbcl --script
-
 (defparameter *source-dir* #P"source/")
 (defparameter *header-dir* #P"headers/")
 (defparameter *amalgamated-name* "cmylib")
-
 
 ;;;; -------------------------------------------------------------------------
 ;;;; File utilities
@@ -488,7 +485,7 @@
 ;;;; Main
 ;;;; -------------------------------------------------------------------------
 
-(defun main ()
+(defun run-amalgamation ()
   (ensure-directories-exist *header-dir*)
 
   (let* ((headers
@@ -539,5 +536,3 @@
     ;; Create cmylib.h.
     (create-amalgamated-header ordered-names)))
 
-
-(main)
