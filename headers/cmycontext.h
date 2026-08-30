@@ -109,6 +109,6 @@ CMYCONTEXT_DEF void pop_context(void)
 	m_context_stack_.len -= 1;
 }
 
-#endif /* CMYCONTEXT_IMPL_IMPL */
+#endif /* CMYCONTEXT_IMPL */
 
 #endif /* CMYCONTEXT_H */

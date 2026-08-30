@@ -91,6 +91,6 @@ CMYCOMMON_DEF void *m_xcalloc_(size_t number, size_t size, int line, const char 
 	return result;
 }
 
-#endif /* CMYCOMMON_IMPL_IMPL */
+#endif /* CMYCOMMON_IMPL */
 
 #endif /* CMYCOMMON_H */
