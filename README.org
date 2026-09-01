@@ -17,8 +17,6 @@ int main(void)
 }
 #+end_src
 
-* TODO amalgamate =cmylib.h=
-
 * How to use
 You can simply grab [[file:./cmylib.h][cmylib.h]] and include it in you project. But also make sure to =#define CMYLIB_IMPL= before including =cmylib.h= in one source file it generate the implementation.
 

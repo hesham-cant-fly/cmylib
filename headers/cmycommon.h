@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #ifndef CMYCOMMON_DEF
 #  define CMYCOMMON_DEF
@@ -44,9 +45,16 @@
  */
 #define xcalloc(number_, size_) m_xcalloc_((number_), (size_), __LINE__, __FILE__)
 
+/**
+ * @brief fprintf fmt_ with format to stderr and exits with code of 1
+ */
+#define panicf(...) (m_panicf_(__FILE__, __LINE__, __VA_ARGS__))
+
 CMYCOMMON_DEF void *m_xmalloc_(size_t size, int line, const char *file);
 CMYCOMMON_DEF void *m_xrealloc_(void *ptr, size_t new_size, int line, const char *file);
 CMYCOMMON_DEF void *m_xcalloc_(size_t number, size_t size, int line, const char *file);
+
+CMYCOMMON_DEF void m_panicf_(const char *file, int line, const char *fmt, ...);
 
 
 #ifdef CMYCOMMON_IMPL
@@ -89,6 +97,18 @@ CMYCOMMON_DEF void *m_xcalloc_(size_t number, size_t size, int line, const char 
 	}
 
 	return result;
+}
+
+CMYCOMMON_DEF void m_panicf_(const char *file, int line, const char *fmt, ...)
+{
+	fprintf(stderr, "%s:%d: ", file, line);
+	
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
+	fprintf(stderr, "\n");
+	exit(1);
 }
 
 #endif /* CMYCOMMON_IMPL */

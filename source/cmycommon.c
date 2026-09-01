@@ -38,3 +38,15 @@ CMYCOMMON_DEF void *m_xcalloc_(size_t number, size_t size, int line, const char 
 
 	return result;
 }
+
+CMYCOMMON_DEF void m_panicf_(const char *file, int line, const char *fmt, ...)
+{
+	fprintf(stderr, "%s:%d: ", file, line);
+	
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
+	fprintf(stderr, "\n");
+	exit(1);
+}
