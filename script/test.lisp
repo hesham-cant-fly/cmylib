@@ -20,7 +20,11 @@
         (concatenate 'string (namestring (merge-pathnames *build-dir* (pathname-name path))) ".out")
         "-I"
         (namestring *include-dir*)
-        (if *verbose-output* "-DTEST_VERBOSE" "")))
+        (if *verbose-output* "-DTEST_VERBOSE" "")
+        "-std=c11"
+        "-Wall"
+        "-Wextra"
+        "-Wpedantic"))
 
 (defun compile-it (path)
   (let ((cmd (compile-command path)))

@@ -260,7 +260,7 @@ CMYCONTEXT_DEF void pop_context(void);
  * @warning Macro arguments are evaluated multiple times; avoid side effects (e.g., `i++`).
  * @note Panics if `begin_ >= len` or `end_ >= len`.
  */
-#define slicing(slice_, begin_, end_) \
+#define subslice(slice_, begin_, end_) \
 	{ \
 		.items = ((begin_ >= (slice_).len) ? (panicf("begin_ is > len: %zu", (slice_).len), NULL) : ((slice_).items + (begin_))), \
 		.len = ((end_ >= (slice_).len) ? (panicf("end_ is > len: %zu", (slice_).len), 0) : ((end_) - (begin_))), \

@@ -25,11 +25,22 @@ TEST_CASE(first_slicing_test)
 	TEST_PASS();
 }
 
+TEST_CASE(test_mutation)
+{
+	int_slice_t ints = slice(int, 1, 2, 3);
+
+	set(ints, 0, 4);
+
+	TEST_ASSERT(get(ints, 0) == 4);
+
+	TEST_PASS();
+}
+
 TEST_CASE(test_slicing)
 {
 	int_slice_t ints = slice(int, 1, 2, 3, 4, 5, 6);
 
-	int_slice_t other_slice = slicing(ints, 1, 4);
+	int_slice_t other_slice = subslice(ints, 1, 4);
 	TEST_ASSERT(other_slice.len == 3);
 	TEST_ASSERT(other_slice.items == rget(ints, 1)); // rget returns a pointer
 
@@ -154,6 +165,7 @@ int main(void)
 	TEST_SETUP();
 
 	RUN_TEST(first_slicing_test);
+	RUN_TEST(test_mutation);
 	RUN_TEST(test_slicing);
 	RUN_TEST(test_looping);
 	RUN_TEST(test_indexed_looping);
