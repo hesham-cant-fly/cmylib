@@ -104,6 +104,23 @@
 		.len = ((end_ >= (slice_).len) ? (panicf("end_ is > len: %zu", (slice_).len), 0) : ((end_) - (begin_))), \
 	}
 
+/**
+ * @brief Iterate over each element in a slice. `break` and `continue` are also supported.
+ *
+ * # Example
+ * @code
+ * int_slice_t integers = slice(int, 1, 2, 3);
+ * FORSLICE (int, item, integers) {
+ *     printf("%d\n", item);
+ * }
+ * @endcode
+ *
+ * @param type_ Element type.
+ * @param var_ Variable receiving the current element (by value).
+ * @param slice_ Slice with `items` and `len` fields.
+ *
+ * @warning Macro arguments are evaluated multiple times; avoid side effects (e.g., `i++`).
+ */
 #define FORSLICE(type_, var_, slice_) \
 	for (type_ *var_##_ptr_ = (slice_).items, \
 	           *var_##_tmp_ = (void*)1, \
@@ -112,6 +129,24 @@
 		       var_##_ptr_ += 1, var_##_tmp_ = (void*)(((char*)var_##_tmp_) + 1)) \
 		for (type_ var_ = *var_##_ptr_; var_##_tmp_ == (void*)1; var_##_tmp_ = NULL)
 
+/**
+ * Iterate over each element in a slice, also providing its zero-based index.
+ *
+ * # Example
+ * @code
+ * int_slice_t integers = slice(int, 1, 2, 3);
+ * IFORSLICE (int, i, item, integers) {
+ *     printf("%z -> %d\n", i, item);
+ * }
+ * @endcode
+ *
+ * @param type_ Element type.
+ * @param i_ Variable receiving the current element index. its going to be of type size_t.
+ * @param var_ Variable receiving the current element (by value).
+ * @param slice_ Slice with `items` and `len` fields.
+ *
+ * @warning Macro arguments are evaluated multiple times; avoid side effects (e.g., `i++`).
+ */
 #define IFORSLICE(type_, i_, var_, slice_) \
 	for (type_ *var_##_start_ = (slice_).items, \
 			   *var_##_ptr_ = (slice_).items, \

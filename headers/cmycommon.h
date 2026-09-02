@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 #ifndef CMYCOMMON_DEF
 #  define CMYCOMMON_DEF
@@ -49,6 +50,8 @@
  * @brief fprintf fmt_ with format to stderr and exits with code of 1
  */
 #define panicf(...) (m_panicf_(__FILE__, __LINE__, __VA_ARGS__))
+
+#define alignof(T_) (offsetof(struct { char x; T_ target; }, target))
 
 /**
  * @brief Execlusive iteration from start_ to `...`
