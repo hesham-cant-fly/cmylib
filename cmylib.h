@@ -63,6 +63,23 @@
  */
 #define panicf(...) (m_panicf_(__FILE__, __LINE__, __VA_ARGS__))
 
+/**
+ * @brief Execlusive iteration from start_ to `...`
+ *
+ * @param n_ The counter's name which is always gonna be of type size_t
+ * @param start_ Where the iteration begins. It must be an integer value.
+ * @param ... Where the iteration ends. It must be an integer value.
+ *
+ * # Example
+ * @code
+ * FORANGE(i, 0, 10) {
+ *     printf("%zu\n", i);
+ * }
+ * @endcode
+ */
+#define FORANGE(n_, start_, ...) \
+	for (size_t n_ = (start_); (n_) < (__VA_ARGS__); (n_) += 1)
+
 CMYCOMMON_DEF void *m_xmalloc_(size_t size, int line, const char *file);
 CMYCOMMON_DEF void *m_xrealloc_(void *ptr, size_t new_size, int line, const char *file);
 CMYCOMMON_DEF void *m_xcalloc_(size_t number, size_t size, int line, const char *file);
