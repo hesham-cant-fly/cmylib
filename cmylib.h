@@ -64,6 +64,9 @@
  */
 #define panicf(...) (m_panicf_(__FILE__, __LINE__, __VA_ARGS__))
 
+/**
+ * @brief Portably get the alignment of a type.
+ */
 #define alignof(T_) (offsetof(struct { char x; T_ target; }, target))
 
 /**
