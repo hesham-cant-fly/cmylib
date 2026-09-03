@@ -3,9 +3,16 @@
 * TODO Write tests for =cmylib.h= itself
 * TODO Write Documentations
 
+* TODO Make alignments helper
+
 * [/] Allocators
-** TODO test for alignment
-** TODO A C allocator wrapper
+** TODO An option to make the allocator sets everything to zero
+#+begin_src c
+#define CMYALLOCATOR_INIT_WITH_ZERO
+#define CMYALLOCATOR_IMPL
+#include "cmyallocator.h"
+#+end_src
+
 ** TODO An X C allocator wrapper
 ** TODO An Arena Allocator
 ** TODO A Temporary Allocator
