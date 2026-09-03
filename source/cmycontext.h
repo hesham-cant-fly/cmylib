@@ -21,8 +21,11 @@
  * }
  * @endcode
  */
+
 #include <stddef.h>
 #include <stdlib.h>
+
+#include "cmyallocator.h"
 
 #ifndef CMYCONTEXT_DEF
 #  define CMYCONTEXT_DEF
@@ -46,6 +49,7 @@
  */
 typedef struct context_t {
 	size_t id;
+	allocator_t allocator;
 } context_t;
 
 typedef struct context_stack_t {

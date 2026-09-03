@@ -51,10 +51,12 @@
  */
 #define panicf(...) (m_panicf_(__FILE__, __LINE__, __VA_ARGS__))
 
+#ifndef alignof
 /**
- * @brief Portably get the alignment of a type.
+ * @brief Portably get the alignment of a type T_.
  */
-#define alignof(T_) (offsetof(struct { char x; T_ target; }, target))
+#  define alignof(T_) (offsetof(struct { char x; T_ target; }, target))
+#endif
 
 /**
  * @brief Execlusive iteration from start_ to `...`
@@ -72,6 +74,16 @@
  */
 #define FORANGE(n_, start_, ...) \
 	for (size_t n_ = (start_); (n_) < (__VA_ARGS__); (n_) += 1)
+
+/**
+ * @brief Mark a symbol as unused to suppress the unused variable warning.
+ */
+#define unused(...) (void)(__VA_ARGS__)
+
+/**
+ * @brief Set every byte in ptr_ to 0
+ */
+#define setzero(ptr_) memset((ptr_), 0, sizeof(*(ptr_)))
 
 CMYCOMMON_DEF void *m_xmalloc_(size_t size, int line, const char *file);
 CMYCOMMON_DEF void *m_xrealloc_(void *ptr, size_t new_size, int line, const char *file);

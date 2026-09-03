@@ -2,3 +2,17 @@
 
 * TODO Write tests for =cmylib.h= itself
 * TODO Write Documentations
+
+* [/] Allocators
+** TODO test for alignment
+** TODO A C allocator wrapper
+** TODO An X C allocator wrapper
+** TODO An Arena Allocator
+** TODO A Temporary Allocator
+** TODO A debug allocator
+- Simple Checking for memory leaks.
+- Simple Checking for double frees.
+- Traps accessing freed memory. (Idk how that works. hopefully its will not be that hard)
+
+** TODO Esoteric Allocator (Idea by volatile)
+If the line is odd, the allocation always fails.

@@ -12,23 +12,20 @@
       (read-sequence content stream)
       content)))
 
-
 (defun copy-file (from to)
   (with-open-file (in from
-                     :direction :input
-                     :element-type '(unsigned-byte 8))
+                      :direction :input
+                      :element-type '(unsigned-byte 8))
     (with-open-file (out to
-                        :direction :output
-                        :if-exists :supersede
-                        :if-does-not-exist :create
-                        :element-type '(unsigned-byte 8))
-      (let ((buffer (make-array 4096
-                                :element-type '(unsigned-byte 8))))
+                         :direction :output
+                         :if-exists :supersede
+                         :if-does-not-exist :create
+                         :element-type '(unsigned-byte 8))
+      (let ((buffer (make-array 4096 :element-type '(unsigned-byte 8))))
         (loop
           for count = (read-sequence buffer in)
           while (> count 0)
           do (write-sequence buffer out :end count))))))
-
 
 ;;;; -------------------------------------------------------------------------
 ;;;; Documentation comment
@@ -63,58 +60,39 @@
 
         (values "" content))))
 
-
 ;;;; -------------------------------------------------------------------------
 ;;;; Include parsing
 ;;;; -------------------------------------------------------------------------
 
 (defun local-include-name (line)
-  "Return the filename from #include \"foo.h\"."
-  (let ((start (search "#include" line)))
-
-    (when start
-      (let ((quote1
-              (position #\"
-                        line
-                        :start (+ start 8))))
-
+  "Return the filename from #include \"foo.h\" if valid and un-commented."
+  (let ((trimmed (string-left-trim '(#\Space #\Tab) line)))
+    (when (and (>= (length trimmed) 8)
+               (string= "#include" trimmed :end1 8 :end2 8))
+      (let ((quote1 (position #\" trimmed :start 8)))
         (when quote1
-          (let ((quote2
-                  (position #\"
-                            line
-                            :start (1+ quote1))))
-
+          (let ((quote2 (position #\" trimmed :start (1+ quote1))))
             (when quote2
-              (subseq line
-                      (1+ quote1)
-                      quote2))))))))
-
+              (subseq trimmed (1+ quote1) quote2))))))))
 
 (defun header-dependencies (name all-names)
   "Return headers directly included by NAME."
-  (let ((path
-          (merge-pathnames
-           (format nil "~A.h" name)
-           *source-dir*))
+  (let ((path (merge-pathnames (format nil "~A.h" name) *source-dir*))
         (deps '()))
 
-    (with-open-file (in path)
-      (loop
-        for line = (read-line in nil nil)
-        while line
-        do
-           (let ((include (local-include-name line)))
-             (when (and include
-                        (member include
-                                all-names
-                                :test #'string=)
-                        (not (string= include name)))
-               (pushnew include
-                        deps
-                        :test #'string=)))))
+    (when (probe-file path)
+      (with-open-file (in path)
+        (loop
+          for line = (read-line in nil nil)
+          while line
+          do (let ((include (local-include-name line)))
+               (when include
+                 (let ((inc-base (pathname-name include)))
+                   (when (and (member inc-base all-names :test #'string=)
+                              (not (string= inc-base name)))
+                     (pushnew inc-base deps :test #'string=))))))))
 
     (nreverse deps)))
-
 
 ;;;; -------------------------------------------------------------------------
 ;;;; Dependency sorting
@@ -129,28 +107,15 @@
     (labels
         ((visit (name)
            ;; Circular dependency.
-           (when (member name temporary
-                         :test #'string=)
-             (error
-              "Circular header dependency involving ~A"
-              name))
+           (when (member name temporary :test #'string=)
+             (error "Circular header dependency involving ~A" name))
 
-           ;; Already processed.
-           (unless (member name permanent
-                           :test #'string=)
-
+           ;; Process dependencies first.
+           (unless (member name permanent :test #'string=)
              (push name temporary)
-
-             ;; Dependencies first.
-             (dolist (dependency
-                       (header-dependencies name names))
+             (dolist (dependency (header-dependencies name names))
                (visit dependency))
-
-             (setf temporary
-                   (delete name
-                           temporary
-                           :test #'string=))
-
+             (setf temporary (delete name temporary :test #'string=))
              (push name permanent)
              (push name result))))
 
@@ -159,14 +124,12 @@
 
     (nreverse result)))
 
-
 ;;;; -------------------------------------------------------------------------
 ;;;; Guard generation
 ;;;; -------------------------------------------------------------------------
 
 (defun header-guard (name)
   (format nil "~:@(~A_H~)" name))
-
 
 (defun implementation-macro (name)
   (format nil "~:@(~A_IMPL~)" name))
@@ -181,86 +144,47 @@
     (multiple-value-bind (doc rest)
         (split-doc-comment header)
 
-      ;; Documentation comment comes before the guard.
       (when (> (length doc) 0)
         (format out "~A~%~%" doc))
 
-      ;; Guard.
-      (format out
-              "#ifndef ~A~%#define ~A~%~%"
-              guard
-              guard)
+      (format out "#ifndef ~A~%#define ~A~%~%" guard guard)
 
-      ;; Implementation switch.
       (when implementation
-        (format out
-                "/* #define ~A */~%~%"
-                impl-macro))
+        (format out "/* #define ~A */~%~%" impl-macro))
 
-      ;; Header.
       (format out "~A" rest)
 
-      ;; Implementation.
       (when implementation
-        (format out
-                "~%~%#ifdef ~A~%"
-                impl-macro)
+        (format out "~%~%#ifdef ~A~%~A~%#endif /* ~A */"
+                impl-macro implementation impl-macro))
 
-        (format out "~A" implementation)
-
-        (format out
-                "~%#endif /* ~A */"
-                impl-macro))
-
-      ;; Guard end.
-      (format out
-              "~%~%#endif /* ~A */~%"
-              guard))))
-
+      (format out "~%~%#endif /* ~A */~%" guard))))
 
 ;;;; -------------------------------------------------------------------------
 ;;;; Individual headers
 ;;;; -------------------------------------------------------------------------
 
 (defun amalgamate (name)
-  (let* ((h-path
-           (merge-pathnames
-            (format nil "~A.h" name)
-            *source-dir*))
-
-         (c-path
-           (merge-pathnames
-            (format nil "~A.c" name)
-            *source-dir*))
-
-         (out-path
-           (merge-pathnames
-            (format nil "~A.h" name)
-            *header-dir*)))
+  (let* ((h-path (merge-pathnames (format nil "~A.h" name) *source-dir*))
+         (c-path (merge-pathnames (format nil "~A.c" name) *source-dir*))
+         (out-path (merge-pathnames (format nil "~A.h" name) *header-dir*)))
 
     (with-open-file (out out-path
                          :direction :output
                          :if-exists :supersede
                          :if-does-not-exist :create)
-
       (write-guarded-file
        out
        name
        (file-content h-path)
        (file-content c-path)))))
 
-
 (defun guard-file (from to name)
   (with-open-file (out to
                        :direction :output
                        :if-exists :supersede
                        :if-does-not-exist :create)
-
-    (write-guarded-file
-     out
-     name
-     (file-content from))))
-
+    (write-guarded-file out name (file-content from))))
 
 ;;;; -------------------------------------------------------------------------
 ;;;; Streaming header writing
@@ -272,126 +196,27 @@
     (loop
       for line = (read-line in nil nil)
       while line
-      do
-         (let ((include (local-include-name line)))
-
+      do (let ((include (local-include-name line)))
            (unless (and include
-                        (member include
-                                names
-                                :test #'string=))
-
+                        (member (pathname-name include) names :test #'string=))
              (write-line line out))))))
-
 
 (defun write-implementation (out path)
   (with-open-file (in path)
     (loop
       for line = (read-line in nil nil)
       while line
-      do
-         (write-line line out))))
-
+      do (write-line line out))))
 
 ;;;; -------------------------------------------------------------------------
 ;;;; Amalgamated header
 ;;;; -------------------------------------------------------------------------
 
-(defun write-amalgamated-header (out name names)
-  (let* ((h-path
-           (merge-pathnames
-            (format nil "~A.h" name)
-            *source-dir*))
-
-         (c-path
-           (merge-pathnames
-            (format nil "~A.c" name)
-            *source-dir*))
-
-         (guard
-           (header-guard name))
-
-         (impl-macro
-           (implementation-macro name)))
-
-    ;; Read only enough of the header to extract its documentation
-    ;; comment. The remainder is then streamed.
-    (let ((header (file-content h-path)))
-
-      (multiple-value-bind (doc rest)
-          (split-doc-comment header)
-
-        ;; Documentation.
-        (when (> (length doc) 0)
-          (format out "~A~%~%" doc))
-
-        ;; Guard.
-        (format out
-                "#ifndef ~A~%#define ~A~%~%"
-                guard
-                guard)
-
-        ;; Implementation switch.
-        (when (probe-file c-path)
-          (format out
-                  "/* #define ~A */~%~%"
-                  impl-macro))
-
-        ;; Write the remainder.
-        ;;
-        ;; NOTE:
-        ;; REST is normally small enough after the documentation
-        ;; extraction, but the actual header body is still written
-        ;; through the stream below.
-        ;;
-        ;; To avoid the large REST string, locate its starting
-        ;; position and stream the original file.
-        (let ((start
-                (if (> (length doc) 0)
-                    (+ (search "*/" header) 2)
-                    0)))
-
-          (with-open-file (in h-path)
-            ;; Skip the documentation comment.
-            (when (> start 0)
-              (file-position in start))
-
-            (loop
-              for line = (read-line in nil nil)
-              while line
-              do
-                 (let ((include (local-include-name line)))
-                   (unless (and include
-                                (member include
-                                        names
-                                        :test #'string=))
-                     (write-line line out))))))
-
-        ;; Implementation.
-        (when (probe-file c-path)
-          (format out
-                  "~%~%#ifdef ~A~%"
-                  impl-macro)
-
-          (write-implementation out c-path)
-
-          (format out
-                  "#endif /* ~A */"
-                  impl-macro))
-
-        ;; Guard.
-        (format out
-                "~%~%#endif /* ~A */~%"
-                guard)))))
-
 (defun create-amalgamated-header (ordered-names)
-  (let* ((out-path
-          (format nil "~A.h" *amalgamated-name*))
-         (guard
-           (header-guard *amalgamated-name*))
-         (def-macro
-          (definition-macro *amalgamated-name*))
-         (impl-macro
-          (implementation-macro *amalgamated-name*)))
+  (let* ((out-path (format nil "~A.h" *amalgamated-name*))
+         (guard (header-guard *amalgamated-name*))
+         (def-macro (definition-macro *amalgamated-name*))
+         (impl-macro (implementation-macro *amalgamated-name*)))
 
     (with-open-file (out out-path
                          :direction :output
@@ -399,87 +224,45 @@
                          :if-does-not-exist :create)
 
       ;; Header documentation.
-      (format out
-              "/*~%")
-      (format out
-              " * @file ~A.h~%"
+      (format out "/*~% * @file ~A.h~% * Amalgamated header.~% * Generated automatically.~% */~%~%"
               *amalgamated-name*)
-      (format out
-              " * Amalgamated header.~%")
-      (format out
-              " * Generated automatically.~%")
-      (format out
-              " */~%~%")
 
       ;; Header guard.
-      (format out
-              "#ifndef ~A~%#define ~A~%~%"
-              guard
-              guard)
+      (format out "#ifndef ~A~%#define ~A~%~%" guard guard)
 
       ;; Implementation switch.
-      (format out
-              "/* #define ~A */~%~%"
-              impl-macro)
+      (format out "/* #define ~A */~%~%" impl-macro)
 
-      ;; Definition switch
-      (format out "#ifndef ~A~%" def-macro)
-      (format out "#  define ~A~%" def-macro)
-      (format out "#endif /* !~A */~%~%" def-macro)
+      ;; Definition switch.
+      (format out "#ifndef ~A~%#  define ~A~%#endif /* !~A */~%~%"
+              def-macro def-macro def-macro)
+
       (dolist (name ordered-names)
-        (format out
-                "#define ~A ~A~%"
-                (definition-macro name)
-                def-macro))
+        (format out "#define ~A ~A~%" (definition-macro name) def-macro))
       (format out "~%")
 
-      ;; Headers.
+      ;; Headers in dependency order.
       (dolist (name ordered-names)
         (format t "Merging: ~A~%" name)
-
-        (let ((h-path
-               (merge-pathnames
-                (format nil "~A.h" name)
-                *source-dir*)))
-
-          (write-header-body
-           out
-           h-path
-           ordered-names))
-
+        (let ((h-path (merge-pathnames (format nil "~A.h" name) *source-dir*)))
+          (write-header-body out h-path ordered-names))
         (format out "~%"))
 
-      ;; Implementations.
-      (format out
-              "~%#ifdef ~A~%"
-              impl-macro)
+      ;; Implementations in dependency order.
+      (format out "~%#ifdef ~A~%" impl-macro)
 
       (dolist (name ordered-names)
-        (let ((c-path
-                (merge-pathnames
-                 (format nil "~A.c" name)
-                 *source-dir*)))
-
+        (let ((c-path (merge-pathnames (format nil "~A.c" name) *source-dir*)))
           (when (probe-file c-path)
             (format t "Merging implementation: ~A~%" name)
-
-            (write-implementation
-             out
-             c-path)
-
+            (write-implementation out c-path)
             (format out "~%"))))
 
-      (format out
-              "#endif /* ~A */~%"
-              impl-macro)
+      (format out "#endif /* ~A */~%" impl-macro)
 
       ;; End guard.
-      (format out
-              "~%#endif /* ~A */~%"
-              guard)
-
-      (format t "~%Created: ~A~%"
-              out-path))))
+      (format out "~%#endif /* ~A */~%" guard)
+      (format t "~%Created: ~A~%" out-path))))
 
 ;;;; -------------------------------------------------------------------------
 ;;;; Main
@@ -488,45 +271,22 @@
 (defun run-amalgamation ()
   (ensure-directories-exist *header-dir*)
 
-  (let* ((headers
-           (directory
-            (merge-pathnames
-             "*.h"
-             *source-dir*)))
-
-         (names
-           (mapcar #'pathname-name headers))
-
-         (ordered-names
-           (topological-sort names)))
+  (let* ((headers (directory (merge-pathnames "*.h" *source-dir*)))
+         (names (mapcar #'pathname-name headers))
+         (ordered-names (topological-sort names)))
 
     ;; Generate individual headers.
     (dolist (h headers)
       (let* ((name (pathname-name h))
-
-             (c
-               (merge-pathnames
-                (format nil "~A.c" name)
-                *source-dir*))
-
-             (out
-               (merge-pathnames
-                (format nil "~A.h" name)
-                *header-dir*)))
-
+             (c (merge-pathnames (format nil "~A.c" name) *source-dir*))
+             (out (merge-pathnames (format nil "~A.h" name) *header-dir*)))
         (if (probe-file c)
-
             (progn
               (amalgamate name)
-              (format t
-                      "Amalgamated: ~A~%"
-                      name))
-
+              (format t "Amalgamated: ~A~%" name))
             (progn
               (guard-file h out name)
-              (format t
-                      "Guarded: ~A~%"
-                      name)))))
+              (format t "Guarded: ~A~%" name)))))
 
     ;; Show dependency order.
     (format t "~%Dependency order:~%")
@@ -535,4 +295,3 @@
 
     ;; Create cmylib.h.
     (create-amalgamated-header ordered-names)))
-
