@@ -97,6 +97,28 @@ typedef struct allocator_t {
 	create_slice((context.allocator), T_, len_)
 
 /**
+ * @brief Reallocate slice_ with context.allocator with new_len_
+ *
+ * @see cmyslice.h
+ *
+ * # Example
+ * @code
+ * typedef struct int_slice_t {
+ *     size_t len;
+ *     int *items;
+ * } person_t;
+ *
+ * int_slice_t ints = new_slice(int, 10);
+ *
+ * ints = (int_slice_t)renew_slice(ints, 15);
+ * @endcode
+ *
+ * @warning Macro arguments are evaluated multiple times; avoid side effects (e.g., `i++`).
+ */
+#define renew_slice(slice_, new_len_) \
+	recreate_slice((context.allocator), (slice_), (new_len_))
+
+/**
  * @brief Releases ptr_ to the context allocator.
  *
  * # Example
@@ -169,6 +191,29 @@ typedef struct allocator_t {
  */
 #define create_slice(allocator_, T_, len_) \
 	{ .items = (allocate((allocator_), alignof(T_), ((sizeof(T_))*(len_)))), .len = (len_) }
+
+/**
+ * @brief Reallocate slice_ with allocator_ with new_len_
+ *
+ * @see cmyslice.h
+ *
+ * # Example
+ * @code
+ * typedef struct int_slice_t {
+ *     size_t len;
+ *     int *items;
+ * } person_t;
+ *
+ * allocator_t allocator = context.allocator;
+ * int_slice_t ints = create_slice(allocator, int, 10);
+ *
+ * ints = (int_slice_t)recreate_slice(allocator, ints, 15);
+ * @endcode
+ *
+ * @warning Macro arguments are evaluated multiple times; avoid side effects (e.g., `i++`).
+ */
+#define recreate_slice(allocator_, slice_, new_len_) \
+	{ .items = (reallocate((allocator_), ((sizeof(*(slice_).items))*(slice_).len), (slice_).items, alignment_from((slice_).items), ((sizeof(*(slice_).items))*(new_len_)))), .len = (new_len_) }
 
 /**
  * @brief Releases ptr_ to the context allocator_.

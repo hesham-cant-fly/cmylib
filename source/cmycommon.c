@@ -1,3 +1,16 @@
+
+CMYCOMMON_DEF size_t m_alignment_from_(void *ptr)
+{
+	uintptr_t p = (uintptr_t)ptr;
+
+	size_t result = (size_t)(p & -p);
+	if (result > alignof(max_align_t)) {
+		return result;
+	}
+
+	return result;
+}
+
 CMYCOMMON_DEF void *m_xmalloc_(size_t size, int line, const char *file)
 {
 #ifdef CMYCOMMON_USE_CALLOC

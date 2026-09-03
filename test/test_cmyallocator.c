@@ -118,6 +118,53 @@ TEST_CASE(test_create_slice)
 	TEST_PASS();
 }
 
+TEST_CASE(test_renew_slice)
+{
+	TEST_ASSERT(allocated == 0);
+
+	int_slice_t ints = new_slice(int, 10);
+
+	TEST_ASSERT(ints.len == 10);
+	TEST_ASSERT(allocated == sizeof(int)*10);
+
+	ints = (int_slice_t)renew_slice(ints, 15);
+	TEST_ASSERT(ints.len == 15);
+	TEST_ASSERT(allocated == sizeof(int)*15);
+
+	ints = (int_slice_t)renew_slice(ints, 5);
+	TEST_ASSERT(ints.len == 5);
+	TEST_ASSERT(allocated == sizeof(int)*5);
+
+	delete_slice(ints);
+	TEST_ASSERT(allocated == 0);
+
+	TEST_PASS();
+}
+
+TEST_CASE(test_recreate_slice)
+{
+	TEST_ASSERT(allocated == 0);
+
+	allocator_t allocator = context.allocator;
+	int_slice_t ints = create_slice(allocator, int, 10);
+
+	TEST_ASSERT(ints.len == 10);
+	TEST_ASSERT(allocated == sizeof(int)*10);
+
+	ints = (int_slice_t)recreate_slice(allocator, ints, 15);
+	TEST_ASSERT(ints.len == 15);
+	TEST_ASSERT(allocated == sizeof(int)*15);
+
+	ints = (int_slice_t)recreate_slice(allocator, ints, 5);
+	TEST_ASSERT(ints.len == 5);
+	TEST_ASSERT(allocated == sizeof(int)*5);
+
+	destroy_slice(allocator, ints);
+	TEST_ASSERT(allocated == 0);
+
+	TEST_PASS();
+}
+
 TEST_CASE(test_allocate)
 {
 	TEST_ASSERT(allocated == 0);
@@ -166,6 +213,8 @@ int main(void)
 	RUN_TEST(test_create);
 	RUN_TEST(test_new_slice);
 	RUN_TEST(test_create_slice);
+	RUN_TEST(test_renew_slice);
+	RUN_TEST(test_recreate_slice);
 	RUN_TEST(test_allocate);
 	RUN_TEST(test_reallocate);
 

@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdalign.h>
 
 #ifndef CMYCOMMON_DEF
 #  define CMYCOMMON_DEF
@@ -44,6 +45,36 @@
 #ifndef NULL
 #  define NULL ((void*)0x0)
 #endif /* !NULL */
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L
+#  define C_STD_90 1
+#else
+#  define C_STD_90 0
+#endif
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#  define C_STD_99 1
+#else
+#  define C_STD_99 0
+#endif
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#  define C_STD_11 1
+#else
+#  define C_STD_11 0
+#endif
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201710L
+#  define C_STD_17 1
+#else
+#  define C_STD_17 0
+#endif
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+#  define C_STD_23 1
+#else
+#  define C_STD_23 0
+#endif
 
 /**
  * @brief a wrapper on top of malloc that panics when `malloc` returns NULL
@@ -72,6 +103,12 @@
 #  define alignof(T_) (offsetof(struct { char x; T_ target; }, target))
 #endif
 
+#if C_STD_23
+#  define alignment_from(...) alignof(typeof(*(__VA_ARGS__)))
+#else
+#  define alignment_from(...) m_alignment_from_((__VA_ARGS__))
+#endif
+
 /**
  * @brief Execlusive iteration from start_ to `...`
  *
@@ -98,6 +135,8 @@
  * @brief Set every byte in ptr_ to 0
  */
 #define setzero(ptr_) memset((ptr_), 0, sizeof(*(ptr_)))
+
+CMYCOMMON_DEF size_t m_alignment_from_(void *ptr);
 
 CMYCOMMON_DEF void *m_xmalloc_(size_t size, int line, const char *file);
 CMYCOMMON_DEF void *m_xrealloc_(void *ptr, size_t new_size, int line, const char *file);
@@ -196,6 +235,28 @@ typedef struct allocator_t {
 	create_slice((context.allocator), T_, len_)
 
 /**
+ * @brief Reallocate slice_ with context.allocator with new_len_
+ *
+ * @see cmyslice.h
+ *
+ * # Example
+ * @code
+ * typedef struct int_slice_t {
+ *     size_t len;
+ *     int *items;
+ * } person_t;
+ *
+ * int_slice_t ints = new_slice(int, 10);
+ *
+ * ints = (int_slice_t)renew_slice(ints, 15);
+ * @endcode
+ *
+ * @warning Macro arguments are evaluated multiple times; avoid side effects (e.g., `i++`).
+ */
+#define renew_slice(slice_, new_len_) \
+	recreate_slice((context.allocator), (slice_), (new_len_))
+
+/**
  * @brief Releases ptr_ to the context allocator.
  *
  * # Example
@@ -268,6 +329,29 @@ typedef struct allocator_t {
  */
 #define create_slice(allocator_, T_, len_) \
 	{ .items = (allocate((allocator_), alignof(T_), ((sizeof(T_))*(len_)))), .len = (len_) }
+
+/**
+ * @brief Reallocate slice_ with allocator_ with new_len_
+ *
+ * @see cmyslice.h
+ *
+ * # Example
+ * @code
+ * typedef struct int_slice_t {
+ *     size_t len;
+ *     int *items;
+ * } person_t;
+ *
+ * allocator_t allocator = context.allocator;
+ * int_slice_t ints = create_slice(allocator, int, 10);
+ *
+ * ints = (int_slice_t)recreate_slice(allocator, ints, 15);
+ * @endcode
+ *
+ * @warning Macro arguments are evaluated multiple times; avoid side effects (e.g., `i++`).
+ */
+#define recreate_slice(allocator_, slice_, new_len_) \
+	{ .items = (reallocate((allocator_), ((sizeof(*(slice_).items))*(slice_).len), (slice_).items, alignment_from((slice_).items), ((sizeof(*(slice_).items))*(new_len_)))), .len = (new_len_) }
 
 /**
  * @brief Releases ptr_ to the context allocator_.
@@ -654,6 +738,19 @@ CMYCONTEXT_DEF void pop_context(void);
 
 
 #ifdef CMYLIB_IMPL
+
+CMYCOMMON_DEF size_t m_alignment_from_(void *ptr)
+{
+	uintptr_t p = (uintptr_t)ptr;
+
+	size_t result = (size_t)(p & -p);
+	if (result > alignof(max_align_t)) {
+		return result;
+	}
+
+	return result;
+}
+
 CMYCOMMON_DEF void *m_xmalloc_(size_t size, int line, const char *file)
 {
 #ifdef CMYCOMMON_USE_CALLOC
