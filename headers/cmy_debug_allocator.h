@@ -37,8 +37,8 @@ typedef struct debug_allocator_t {
 	       total_double_free,
 	       total_invalid_free,
 	       total_invalid_realloc;
-	bool panic_on_ub;
-	bool silence_ub;
+	bool panic_on_ub,
+	     silence;
 	debug_allocation_info_t *allocated_head;
 	debug_allocation_info_t *allocated_tail;
 	debug_deallocation_info_t *freed_head;
@@ -71,11 +71,15 @@ size_t deinit_debug_allocator(debug_allocator_t *dbg)
 {
 	if (dbg->total_allocated == 0) return 0;
 
-	fprintf(stderr, "Error: MEMORY LEAK DETECTED! Leaked Totally %zu bytes. Only Freed %zu bytes.\n", dbg->total_allocated, dbg->total_freed);
+	if (!dbg->silence) {
+		fprintf(stderr, "Error: MEMORY LEAK DETECTED! Leaked Totally %zu bytes. Only Freed %zu bytes.\n", dbg->total_allocated, dbg->total_freed);
+	}
 
 	size_t amount = 0;
 	for (debug_allocation_info_t *current = dbg->allocated_head; current != NULL; current = current->next) {
-		fprintf(stderr, "%s:%d: Error: %zu bytes leaked here. Address: %p.\n", current->allocated_in.file, current->allocated_in.line, current->size, (void*)current->data);
+		if (!dbg->silence) {
+			fprintf(stderr, "%s:%d: Error: %zu bytes leaked here. Address: %p.\n", current->allocated_in.file, current->allocated_in.line, current->size, (void*)current->data);
+		}
 		amount += 1;
 		free(current);
 	}
@@ -224,7 +228,7 @@ static void *default_debug_reallocate(void *self, char *file, int line, size_t o
 	}
 
 	if (!check_if_allocated(dbg, ptr)) {
-		if (!dbg->silence_ub) {
+		if (!dbg->silence) {
 			fprintf(stderr, "%s:%d: Error: Cannot Reallocate %p as its not previously allocated.\n", file, line, ptr);
 		}
 		if (dbg->panic_on_ub) {
@@ -238,7 +242,7 @@ static void *default_debug_reallocate(void *self, char *file, int line, size_t o
 	{
 		debug_deallocation_info_t *info = check_if_already_freed(dbg, ptr);
 		if (info != NULL) {
-			if (!dbg->silence_ub) {
+			if (!dbg->silence) {
 				fprintf(stderr, "%s:%d: Error: Cannot Reallocate %p as its already been freed.\n", file, line, ptr);
 				fprintf(stderr, "%s:%d: Info: Its *already* freed here.\n", info->freed_in.file, info->freed_in.line);
 				fprintf(stderr, "%s:%d: Info: Previously allocated here.\n", info->allocated_in.file, info->allocated_in.line);
@@ -292,7 +296,7 @@ static void default_debug_deallocate(void *self, char *file, int line, size_t si
 	debug_allocator_t *dbg = self;
 
 	if (!check_if_allocated(dbg, ptr)) {
-		if (!dbg->silence_ub) {
+		if (!dbg->silence) {
 			fprintf(stderr, "%s:%d: Error: Attempt at freeing invalid pointer: %p.\n", file, line, ptr);
 		}
 		if (dbg->panic_on_ub) {
@@ -306,7 +310,7 @@ static void default_debug_deallocate(void *self, char *file, int line, size_t si
 	{
 		debug_deallocation_info_t *info = check_if_already_freed(dbg, ptr);
 		if (info != NULL) {
-			if (!dbg->silence_ub) {
+			if (!dbg->silence) {
 				fprintf(stderr, "%s:%d: Error: Double Free of %p has been detected!\n", file, line, ptr);
 				fprintf(stderr, "%s:%d: Info: Its *already* freed here.\n", info->freed_in.file, info->freed_in.line);
 				fprintf(stderr, "%s:%d: Info: Previously allocated here.\n", info->allocated_in.file, info->allocated_in.line);

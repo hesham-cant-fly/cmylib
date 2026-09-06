@@ -34,12 +34,29 @@ TEST_CASE(test_debug_good_path)
 	TEST_PASS();
 }
 
+TEST_CASE(test_direct_memory_leak)
+{
+	setup_debug_allocator();
+
+	int *x = new(int, {6});
+
+	delete(x);
+
+	new(int, {7});
+
+	size_t object_leaked = deinit_debug_allocator(&dbg_allocator);
+	TEST_ASSERT(object_leaked == 1);
+
+	TEST_PASS();
+}
+
 int main(void)
 {
 	init_context();
 	TEST_SETUP();
 
 	RUN_TEST(test_debug_good_path);
+	RUN_TEST(test_direct_memory_leak);
 
 	TEST_SUMMARY();
 }
@@ -48,6 +65,6 @@ static void setup_debug_allocator(void)
 {
 	dbg_allocator = make_debug_allocator();
 	dbg_allocator.panic_on_ub = false;
-	dbg_allocator.silence_ub = true;
+	dbg_allocator.silence = true;
 	context.allocator = debug_allocator(&dbg_allocator);
 }

@@ -32,8 +32,8 @@ typedef struct debug_allocator_t {
 	       total_double_free,
 	       total_invalid_free,
 	       total_invalid_realloc;
-	bool panic_on_ub;
-	bool silence_ub;
+	bool panic_on_ub,
+	     silence;
 	debug_allocation_info_t *allocated_head;
 	debug_allocation_info_t *allocated_tail;
 	debug_deallocation_info_t *freed_head;
