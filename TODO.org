@@ -1,5 +1,8 @@
 #+title: TODO
 
+* TODO License as BSD
+* TODO Abuse #file directive in amalgamation
+
 * TODO Write tests for =cmylib.h= itself
 * TODO Write Documentations
 

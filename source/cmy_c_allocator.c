@@ -9,7 +9,7 @@ static allocator_interface_t m_c_allocator_vtable_ = {
 	.deallocate = c_deallocate,
 };
 
-CMY_C_ALLOCATOR_DEF allocator_t get_c_allocator(void)
+CMY_C_ALLOCATOR_DEF allocator_t c_allocator(void)
 {
 	return (allocator_t) {
 		.vtable = &m_c_allocator_vtable_,

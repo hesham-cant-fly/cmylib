@@ -14,5 +14,9 @@ snake_case. /FOR ALMOST EVERYTHING/
 - *macro arguments*: they must end with =_=. no other identifier should end =_=, except for *privates*.
 - *"privates"*: They start with =m_= and ends with =_=. You may say.. "but Hesham! If you something to be private just declare as =static= in a source file!!". Well.. thats true. but I'm specifically talking about declaration that must be inside of a header (like the =extern= in =source/cmycontext.h=). as they are not intended to be used directly.
 
+- Initializers that returns an initialized object must be prefixed with =make_=. e.g. =debug_allocator_t make_debug_allocator(void)=.
+- Initializers that requires passing a reference of the object to it must be prefixed with =init_=. e.g. =void init_debug_allocator_(debug_allocator *dbg)=.
+- Deinitalize functions are always prefixed with =deinit_=
+
 * Typedefs
 When using =typedef=, make sure that the name you're gonna put the same now of the =typedef= after the =struct/union/enum= keyword.

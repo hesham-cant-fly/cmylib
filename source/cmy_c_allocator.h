@@ -11,4 +11,4 @@
 #  define CMY_C_ALLOCATOR_DEF
 #endif /* !CMY_C_ALLOCATOR_DEF */
 
-CMY_C_ALLOCATOR_DEF allocator_t get_c_allocator(void);
+CMY_C_ALLOCATOR_DEF allocator_t c_allocator(void);

@@ -20,6 +20,7 @@
         (concatenate 'string (namestring (merge-pathnames *build-dir* (pathname-name path))) ".out")
         "-I"
         (namestring *include-dir*)
+		"-I./"
         (if *verbose-output* "-DTEST_VERBOSE" "")
         "-std=c11"
         "-Wall"

@@ -23,7 +23,7 @@ TEST_CASE(test_cmy_c_allocator)
 int main(void)
 {
 	init_context();
-	context.allocator = get_c_allocator();
+	context.allocator = c_allocator();
 
 	TEST_SETUP();
 
